@@ -143,7 +143,6 @@ class ControlChart:
         for name, rule in rules.items():
             results[name] = rule(self)
         return results
-        return pd.DataFrame(results)
 
     def fit(self,
             x: pd.Series,
@@ -205,7 +204,6 @@ class ControlChart:
 
         self.x = x
         self.y = y
-        self.df = pd.concat([x, y], axis=1)
 
         if isinstance(lower_control_limit, pd.Series):
             self.lower_control_limit = lower_control_limit
@@ -222,6 +220,11 @@ class ControlChart:
         else:
             self.upper_control_limit = pd.Series([upper_control_limit] * len(x), index=x.index)
 
+
+        self.center_line.name = "CL"
+        self.upper_control_limit.name = "UCL"
+        self.lower_control_limit.name = "LCL"
+        self.df = pd.concat([self.x, self.y, self.lower_control_limit, self.center_line, self.upper_control_limit], axis=1)
         return self
 
     def plot(self, fig: Optional[plt.Figure] = None, ax: Optional[plt.Axes] = None):
@@ -264,9 +267,9 @@ class ControlChart:
         ax.set_title(f"{self.__class__.__name__}")
         ax.set_xlabel(self.x.name)
         ax.set_ylabel(self.y.name)
-        ax.step(self.x, self.upper_control_limit, 'r--', label='UCL')
-        ax.step(self.x, self.center_line, color='green', linestyle='-', label='CL')
-        ax.step(self.x, self.lower_control_limit, 'r--', label='LCL')
+        ax.plot(self.x, self.upper_control_limit, 'r--', label='UCL')
+        ax.plot(self.x, self.center_line, color='green', linestyle='-', label='CL')
+        ax.plot(self.x, self.lower_control_limit, 'r--', label='LCL')
         ax.plot(self.x, self.y, marker='o', linestyle='-')
 
 class CompositeControlChart:
@@ -357,19 +360,11 @@ class CompositeControlChart:
         Returns:
         - A dictionary with rule names as keys and rule evaluation results as values for each ControlChart object in the list.
         """
-        dfs = []
         results = {}
 
         for chart in self.charts:
             results[chart.__class__.__name__] = chart.evaluate_rules(rules)
         return results
-        for chart in self.charts:
-            df = chart.evaluate_rules(rules)
-            dfs.append(df)
-        
-        df = pd.concat(dfs, axis=1, keys=[chart.__class__.__name__ for chart in self.charts])
-        return df
-        
 
     def fit(self, **kwargs):
         """
@@ -384,7 +379,7 @@ class CompositeControlChart:
         for chart in self.charts:
             chart.fit(**kwargs)
         return self
-    
+
     def plot(self):
         """
         Plots the CompositeControlChart object.

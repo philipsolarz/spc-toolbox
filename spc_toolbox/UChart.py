@@ -23,22 +23,23 @@ class UChart(ControlChart):
         if isinstance(index, pd.Index):
             index = pd.Series(index)
         if not isinstance(defects, pd.Series):
-            raise TypeError("defective_items must be a Series.")
+            raise TypeError("defects must be a Series.")
         if not isinstance(sample_sizes, pd.Series) and not isinstance(sample_sizes, int):
             raise TypeError("sample_sizes must be a Series or an integer.")
         if type(z) != float:
             raise TypeError("z must be a float.")
 
-        defects_per_item = defects / sample_sizes
-        defects_per_item.name = "Defects Per Item"
-        average_defects_per_item = defects_per_item.mean()
+        defects_per_unit = defects / sample_sizes
+        defects_per_unit.name = "Defects Per Unit"
 
-        std_dev = np.sqrt(average_defects_per_item / sample_sizes)
+        average_defects_per_unit = defects.sum() / sample_sizes.sum()
+        
+        std_dev = np.sqrt(average_defects_per_unit / sample_sizes)
         self.sigma = std_dev
 
-        center_line = average_defects_per_item
-        upper_control_limit = average_defects_per_item + z * std_dev
-        lower_control_limit = np.maximum(average_defects_per_item - z * std_dev, 0)
+        center_line = average_defects_per_unit
+        upper_control_limit = average_defects_per_unit + z * std_dev
+        lower_control_limit = np.maximum(average_defects_per_unit - z * std_dev, 0)
 
-        super().fit(index, defects_per_item, lower_control_limit, center_line, upper_control_limit)
+        super().fit(index, defects_per_unit, lower_control_limit, center_line, upper_control_limit)
         return self
