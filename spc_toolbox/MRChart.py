@@ -30,6 +30,7 @@ class MRChart(ControlChart):
             raise ValueError("n must be greater than 0.")
         
         moving_range = values.diff(n - 1).abs()
+        moving_range.name = "Moving Range"
         moving_range_average = values.diff(n - 1).abs().mean()
 
         D4 = get_chart_constant('D4', n)

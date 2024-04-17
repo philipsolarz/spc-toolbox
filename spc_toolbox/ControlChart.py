@@ -267,10 +267,36 @@ class ControlChart:
         ax.set_title(f"{self.__class__.__name__}")
         ax.set_xlabel(self.x.name)
         ax.set_ylabel(self.y.name)
-        ax.plot(self.x, self.upper_control_limit, 'r--', label='UCL')
-        ax.plot(self.x, self.center_line, color='green', linestyle='-', label='CL')
-        ax.plot(self.x, self.lower_control_limit, 'r--', label='LCL')
+        ax.step(self.x, self.upper_control_limit, 'r--', label='UCL')
+        ax.step(self.x, self.center_line, color='green', linestyle='-', label='CL')
+        ax.step(self.x, self.lower_control_limit, 'r--', label='LCL')
         ax.plot(self.x, self.y, marker='o', linestyle='-')
+
+        # Define a list of colors for visual distinction
+        colors = ['red', 'purple', 'orange', 'brown', 'pink', 'yellow', 'cyan', 'magenta', 'gray', 'green']
+
+        # Evaluate the rules
+        rule_results = self.evaluate_rules()
+
+        # To ensure each rule is represented once in the legend, we will keep track of which rules have been added
+        added_rules = set()
+
+        # Plot the points where rules are satisfied, if results are boolean Series
+        for index, (rule_name, results) in enumerate(rule_results.items()):
+            if isinstance(results, pd.Series) and results.dtype == bool:
+                satisfied_indices = results.index[results == True]
+                color = colors[index % len(colors)]  # Cycle through colors list
+                # Only add the rule to the legend the first time it is encountered
+                for idx in satisfied_indices:
+                    if rule_name not in added_rules:
+                        ax.plot([self.x.loc[idx]], [self.y.loc[idx]], 'o', markersize=7, color=color, label=rule_name)
+                        added_rules.add(rule_name)  # Mark this rule as added to the legend
+                    else:
+                        ax.plot([self.x.loc[idx]], [self.y.loc[idx]], 'o', markersize=7, markeredgewidth=2, color=color, label="_nolegend_")
+
+        # Adding and customizing the legend
+        ax.legend(fontsize='xx-small', title_fontsize='xx-small', loc='upper right')
+
 
 class CompositeControlChart:
     def __init__(self, charts: List[ControlChart]):
@@ -378,6 +404,8 @@ class CompositeControlChart:
         """
         for chart in self.charts:
             chart.fit(**kwargs)
+
+        self.df = pd.concat([chart.df for chart in self.charts], axis=1)
         return self
 
     def plot(self):

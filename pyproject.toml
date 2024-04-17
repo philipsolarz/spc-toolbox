@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spc-toolbox"
-version = "0.1.1"
+version = "0.1.2"
 description = "A toolbox for Statistical Process Control"
 authors = ["Philip Solarz <philip.solarz@teliacompany.com>"]
 readme = "README.md"

@@ -30,14 +30,16 @@ class PChart(ControlChart):
             raise TypeError("z must be a float.")
 
         proportions = defectives / sample_sizes
+        proportions.name = "Proportions"
 
         overall_proportion = defectives.sum() / sample_sizes.sum()
+        average_sample_size = sample_sizes.sum() / len(sample_sizes) # 
 
-        std_dev = np.sqrt(proportions * (1 - proportions) / sample_sizes)
+        std_dev = np.sqrt(proportions * (1 - proportions) / average_sample_size)
         self.sigma = std_dev
 
         center_line = overall_proportion
-        # center_line = pd.Series([average_proportion] * len(index))
+
         upper_control_limit = overall_proportion + z * std_dev
         lower_control_limit = np.maximum(overall_proportion - z * std_dev, 0)
 
